@@ -7,6 +7,11 @@
             "Joaocoura\\Redwood\\": "src/"
         }
     },
+    "scripts": {
+        "test": [
+            "phpunit --colors=always --testdox"
+        ]
+    },
     "authors": [
         {
             "name": "joao coura",

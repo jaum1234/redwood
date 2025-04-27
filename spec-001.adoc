@@ -1,0 +1,107 @@
+= SPEC-001: Logs Estruturados
+:sectnums:
+:toc:
+
+== Requisitos
+
+*Obrigatórios:*
+
+- Registros de todas as operações críticas e erros (ex: baixa, partilha e emissão) para facilitar a auditoria em ambientes de produção
+- Registro de demais eventos para facilitar a depuração em ambientes de desenvolvimento e homologação
+- Devem ser registrados: timestamp, nível do log, mensagem e contexto adicional
+- Cada evento/operação deve ser registrado em um arquivo separado
+- Os logs devem ser imutáveis
+- Os logs devem ser persistidos rotacionados diariamente
+- O sistema de logs deve ter impacto mínimo no desempenho da aplicação
+- Deve seguir os padrões definidos pelo PSR-3
+- O sistema deve implementar uma classe concreta que armazene os logs em arquivos
+- O ambiente de produção deve ser limitado a logs de auditoria ou logs com nível de erro `ERROR` ou superior
+
+*Desejáveis:*
+
+- Logs de auditoria armazenados separadamente dos logs gerais da aplicação
+- Logs estruturados (formato JSON) para facilitar análise e consulta
+- Acesso seguro aos logs (com restrição de leitura/escrita)
+- Classe concreta que armazene logs no banco de dados
+
+== Método
+
+=== Arquitetura de Alto Nível
+
+Introduzir um sistema de logs interno e leve que:
+
+- Implemente uma `LoggerInterface` compatível com PSR-3
+- Utilize diferentes instâncias de `FileHandler` para diferentes tipos de logs (aplicação, auditoria e etc)
+- Armazene logs estruturados em JSON em disco com rotação diária
+
+==== Diagrama de Classes
+
+[mermaid, arquitetura, png]
+----
+classDiagram
+  class LoggerInterface {
+    +log(level: string, message: string, context: array): void
+    +emergency(message: string, context: array): void
+    +alert(message: string, context: array): void
+    +critical(message: string, context: array): void
+    +error(message: string, context: array): void
+    +warning(message: string, context: array): void
+    +notice(message: string, context: array): void
+    +info(message: string, context: array): void
+    +debug(message: string, context: array): void
+  }
+
+  class FileLogger {
+    -handlers: array
+  }
+
+  class DatabaseLogger {
+    -dbs: db_layer
+  }
+
+  class FileHandler {
+    -filePath: string
+    +writeLog(logEntry: string): void
+  }
+
+  LoggerInterface <|-- FileLogger
+  FileLogger o-- FileHandler
+  LoggerInterface <|-- DatabaseLogger
+  DatabaseLogger o-- db_layer
+----
+
+==== Diagrama de Sequência
+
+[mermaid, sequencia, png]
+----
+sequenceDiagram
+  participant Usuário
+  participant Aplicação
+  participant Serviço de Logs
+  participant Armazenamento em Disco
+
+  Usuário->>Aplicação: Executa operação
+  Aplicação->>Serviço de Logs: Registra evento
+  Serviço de Logs->>Armazenamento em Disco: Escreve entrada de log
+----
+
+=== Detalhes dos Componentes
+
+*Implementação Customizada do Logger:*
+
+- `LoggerInterface.php` seguindo a especificação PSR-3
+- `FileLogger.php` implementando `LoggerInterface`, utilizando um `FileHandler`
+- `FileHandler.php` responsável pelas operações de arquivo e rotação diária
+
+*Exemplo de Formato de Log:*
+```json
+{
+  "timestamp": "2025-04-26T12:34:56Z",
+  "level": "INFO",
+  "message": "Usuário iniciou transação",
+  "context": {
+    "user_id": 1234,
+    "operation_id": "abcd-efgh-ijkl"
+  }
+}
+```

@@ -1,0 +1,22 @@
+{
+    "name": "joaocoura/redwood",
+    "description": "Logging Library",
+    "type": "library",
+    "autoload": {
+        "psr-4": {
+            "Joaocoura\\Redwood\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "joao coura",
+            "email": "joaovitorsouzacoura@gmai.com"
+        }
+    ],
+    "require": {
+        "psr/log": "3.0.2"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "12.1.3"
+    }
+}
